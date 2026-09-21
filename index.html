@@ -849,8 +849,9 @@
       </div>
       <p class="note">
         The ablated model keeps the same tactile encoder, observations, action expert, action space
-        and training data; <strong>only tactile prediction is removed</strong> from the world model.
-        The four-task mean decreases from 74.7 to 26.6. The gain therefore depends strongly on
+        and training data; <strong>only tactile prediction is removed</strong> from the world model,
+        and the action expert is conditioned on encoded tactile features directly instead of on
+        predicted tactile latents. The four-task mean decreases from 74.7 to 26.6. The gain therefore depends strongly on
         modeling contact evolution as part of the predicted world state rather than on tactile
         conditioning alone.
       </p>
