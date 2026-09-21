@@ -546,6 +546,23 @@
         supervise the latents and encourage the fused hand latent to retain localized contact.
       </p>
 
+      <p class="note">
+        What the encoder actually sees: each fingertip returns a grayscale image of a deformable
+        marker grid, so contact arrives as a spatial pattern rather than a scalar force reading.
+        That is what makes a pretrained visual VAE a natural starting point for touch.
+      </p>
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" width="2000" height="620" src="static/images/raw_tactile_observations.jpg?v=20260921-1" alt="Raw head, wrist, and ten-fingertip tactile observations before and during contact on the two-hand wipe task" />
+      </figure>
+      <p class="caption">
+        Raw visuo-tactile observations before and during contact on the two-hand Wipe task.
+        Each block is one instant from a teleoperated episode: the head and two wrist-camera views,
+        together with all ten fingertip tactile observations. Before contact, both hands are in free
+        space and the marker grids remain largely undeformed. During wiping, the left hand stabilizes
+        the board while the right hand loads the eraser, producing localized compression and shear on
+        the engaged fingertips. All tactile panels share the same grayscale range.
+      </p>
+
       <div class="stages" id="method-training">
         <div class="stage"><span class="stage-tag">Stage 1</span>
           <div class="stage-content"><strong>Tactile-Encoder Pretraining.</strong> Pretrain lightweight tactile modules on a diverse ~4-hour, <strong>488-episode</strong> corpus with the visual VAE frozen.</div>
