@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description"
+        content="DexTacWAM: A Visuo-Tactile World-Action Model for Dexterous Manipulation." />
+  <meta property="og:title" content="DexTacWAM: A Visuo-Tactile World-Action Model for Dexterous Manipulation" />
+  <meta property="og:description" content="DexTacWAM extends a pretrained video world model to jointly model visual scene dynamics and multi-finger tactile contact dynamics." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="static/images/teaser.png?v=20260916-2" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <title>DexTacWAM: A Visuo-Tactile World-Action Model for Dexterous Manipulation</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="static/css/style.css?v=20260920-1" />
+</head>
+
+<body>
+  <a class="skip-link" href="#motivation">Skip to research content</a>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+
+  <!-- ============================ NAVBAR ============================ -->
+  <header class="nav nav-after-hero" id="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#top">Dex<span class="brand-accent">Tac</span>WAM</a>
+      <nav class="nav-links" id="navLinks" aria-label="Main navigation">
+        <a href="#motivation">Motivation</a>
+        <a href="#abstract">Abstract</a>
+        <a href="#data-efficiency">Data</a>
+        <a href="#bottleneck">Compute</a>
+        <a href="#method">Method</a>
+        <a href="#encoder-ablation">Encoder</a>
+        <a href="#tasks">Tasks</a>
+        <a href="#results">Results</a>
+        <a href="#prediction">Prediction</a>
+        <a href="#retention">Retention</a>
+        <a href="#qa">Q&amp;A</a>
+        <a href="#bibtex">BibTeX</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="navLinks">☰</button>
+    </div>
+  </header>
+
+  <!-- ============================ SIDE TOC ============================ -->
+  <aside class="toc" id="toc" aria-label="Section navigation">
+    <div class="toc-title">Contents</div>
+    <nav>
+      <div class="toc-group"><a href="#motivation">Why Tactile World Models</a></div>
+      <div class="toc-group"><a href="#abstract">Abstract</a></div>
+      <div class="toc-group">
+        <a href="#data-efficiency">Data Efficiency</a>
+        <div class="toc-sub">
+          <a href="#insight">Why It Works</a>
+          <div class="toc-sub">
+            <a href="#insight-tsne">Latent Structure</a>
+            <a href="#insight-contact">Contact Evolution</a>
+          </div>
+        </div>
+      </div>
+      <div class="toc-group"><a href="#bottleneck">Computation Efficiency</a></div>
+      <div class="toc-group">
+        <a href="#method">Method</a>
+        <div class="toc-sub">
+          <a href="#method-design">Key Design</a>
+          <a href="#method-modules">Pipeline Modules</a>
+          <a href="#method-encoder">Encoder Architecture</a>
+          <a href="#method-training">Training Stages</a>
+        </div>
+      </div>
+      <div class="toc-group"><a href="#encoder-ablation">Encoder Ablation</a></div>
+      <div class="toc-group">
+        <a href="#tasks">Six Tasks</a>
+        <div class="toc-sub">
+          <a href="#task-demos">Rollout Videos</a>
+        </div>
+      </div>
+      <div class="toc-group">
+        <a href="#results">Results</a>
+        <div class="toc-sub">
+          <a href="#results-avg">Average Score</a>
+          <a href="#results-pertask">Per-Task</a>
+          <a href="#results-ablation">Policy Ablations</a>
+          <a href="#results-general">Generalization</a>
+        </div>
+      </div>
+      <div class="toc-group">
+        <a href="#prediction">World-Model Prediction</a>
+        <div class="toc-sub">
+          <a href="#pred-rollout">Long-Horizon Rollout</a>
+          <a href="#pred-metrics">Prediction Quality</a>
+        </div>
+      </div>
+      <div class="toc-group">
+        <a href="#retention">Vision-to-Touch</a>
+        <div class="toc-sub">
+          <a href="#retention-rgb">Vision Retention</a>
+        </div>
+      </div>
+      <div class="toc-group"><a href="#conclusion">Conclusion</a></div>
+      <div class="toc-group"><a href="#qa">Q&amp;A</a></div>
+      <div class="toc-group"><a href="#bibtex">BibTeX</a></div>
+    </nav>
+  </aside>
+
+  <!-- ============================ HERO ============================ -->
+  <section class="hero" id="top">
+    <div class="hero-media">
+      <video id="featuredRollout" muted playsinline preload="metadata" aria-label="Featured autonomous robot demonstration"
+             poster="static/videos/web/tasks/tongs_poster.jpg?v=20260916-2"
+             src="static/videos/web/tasks/tongs.mp4"></video>
+    </div>
+    <div class="hero-scrim"></div>
+    <div class="container hero-content">
+      <h1 class="title">Dex<span class="brand-accent">Tac</span>WAM</h1>
+      <p class="subtitle">
+        A Visuo-Tactile World-Action Model<br />
+        for Dexterous Manipulation
+      </p>
+
+      <div class="badges">
+        <span class="badge">Predictive Contact Dynamics</span>
+        <span class="badge">Continual Vision-to-Touch Learning</span>
+        <span class="badge">Efficient Multi-Finger World Modeling</span>
+      </div>
+
+    </div>
+    <div class="container hero-bottom">
+      <div class="hero-rollout-status">
+        <span class="hero-rollout-task" id="featuredRolloutTitle">Tongs</span>
+        <span id="featuredRolloutDescription">Tool-mediated force control</span>
+        <span>Autonomous · 2× playback</span>
+      </div>
+      <div class="rollout-selector" aria-label="Select hero rollout">
+        <button class="active" type="button" data-rollout="0" aria-pressed="true">Tongs</button>
+        <button type="button" data-rollout="1" aria-pressed="false">Bowl Unstacking</button>
+        <button type="button" data-rollout="2" aria-pressed="false">Bottle Cap Unscrewing</button>
+        <button type="button" data-rollout="3" aria-pressed="false">Two-Hand Wipe</button>
+      </div>
+
+      <div class="hero-footer-actions">
+        <a class="hero-scroll" href="#project-highlights">
+          <span>Explore the project</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v16m-6-6 6 6 6-6" /></svg>
+        </a>
+        <button class="hero-playback" id="heroPlayback" type="button" aria-label="Play background video"><span class="playback-icon" aria-hidden="true">▶</span><span class="playback-text">Play video</span></button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================ STATS BAND ============================ -->
+  <section class="stats-band" id="project-highlights" aria-label="Project highlights">
+    <div class="container">
+      <div class="stats">
+        <div class="stat-group">
+          <div class="stat-group-title">Performance</div>
+          <div class="stat-line"><strong>6 / 6</strong> — Best on all tasks</div>
+          <div class="stat-line"><strong>70.6 vs. 38.0</strong> — Avg. score vs. strongest baseline</div>
+        </div>
+        <div class="stat-group">
+          <div class="stat-group-title">Data-Efficient Adaptation</div>
+          <div class="stat-line"><strong>4 h of tactile data</strong> — Tactile-Encoder Adaptation</div>
+          <div class="stat-line"><strong>No Video-Model Tactile Midtraining</strong> — Direct Vision-to-Touch Finetuning</div>
+        </div>
+        <div class="stat-group">
+          <div class="stat-group-title">Efficient Tactile Modeling</div>
+          <div class="stat-line"><strong>89.4%</strong> — Contact Retention after 5:1 Compression</div>
+          <div class="stat-line"><strong>2.26× / 1.29×</strong> — Training / Inference Speedup</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ PROJECT DETAILS ============================ -->
+  <section class="project-info" id="project-info" aria-labelledby="project-title">
+    <div class="container project-info-content">
+      <header class="project-heading">
+        <h2 class="project-title" id="project-title">Dex<span class="brand-accent">Tac</span>WAM</h2>
+        <p class="project-subtitle">A Visuo-Tactile World-Action Model for Dexterous Manipulation</p>
+      </header>
+      <div class="authors">
+        <div class="author-row author-row-main">
+          <span>Haoran Yuan<sup>1,‡</sup></span>
+          <span>Zekai Wang<sup>2</sup></span>
+          <span>Boning Shao<sup>2</sup></span>
+          <span>Haoran Lu<sup>3</sup></span>
+          <span>Trevor Darrell<sup>2</sup></span>
+          <span>Ismini Lourentzou<sup>1,†</sup></span>
+          <span>Wei Zhan<sup>2,†</sup></span>
+        </div>
+      </div>
+      <div class="affiliations">
+        <div class="affiliation-row">
+          <span><sup>1</sup>University of Illinois Urbana-Champaign</span>
+          <span><sup>2</sup>University of California, Berkeley</span>
+          <span><sup>3</sup>Northwestern University</span>
+        </div>
+        <div class="credit-row">
+          <span class="project-lead-note"><sup>‡</sup>Project lead</span>
+          <span class="advising-note"><sup>†</sup>Equal advising, co-corresponding authors</span>
+        </div>
+      </div>
+
+      <div class="links">
+        <span class="link-btn is-pending"><span class="ic">⌨</span> Code (coming soon)</span>
+        <a class="link-btn" href="#bibtex"><span class="ic">❝</span> BibTeX</a>
+      </div>
+
+      <div class="institution-logos" aria-label="Affiliated universities">
+        <img class="institution-logo institution-logo-uiuc" src="static/images/logos/uiuc.png?v=20260916-2" width="559" height="145" alt="University of Illinois Urbana-Champaign" decoding="async" />
+        <img class="institution-logo institution-logo-berkeley" src="static/images/logos/uc-berkeley.png?v=20260916-2" width="1125" height="210" alt="UC Berkeley" decoding="async" />
+        <img class="institution-logo institution-logo-northwestern" src="static/images/logos/northwestern.png?v=20260916-2" width="1000" height="134" alt="Northwestern University" decoding="async" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ TEASER ============================ -->
+  <section class="section teaser">
+    <div class="container">
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" src="static/images/teaser.png?v=20260916-2" alt="DexTacWAM overview" />
+      </figure>
+      <p class="caption">
+        <strong>DexTacWAM</strong> extends a pretrained video world model to multi-finger tactile
+        dynamics through lightweight tactile-encoder adaptation and continual vision-to-touch
+        learning. A single world-model forward pass exposes predictive visuo-tactile features
+        directly to the action expert.
+      </p>
+      <blockquote class="pull-quote">
+        We integrate multi-finger tactile sensing into the World-Action Model to jointly predict visual and contact dynamics.
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- ============================ MOTIVATION ============================ -->
+  <section class="section alt" id="motivation">
+    <div class="container">
+      <h2 class="section-title">Motivation</h2>
+      <p class="lead">
+        Vision-centric WAMs model visible scene dynamics but omit hidden contact dynamics.
+        Tactile-conditioned policies can observe current contact, but do not necessarily model how
+        contact evolves. DexTacWAM instead treats touch as part of the predicted world state and
+        jointly models visual and multi-finger tactile dynamics.
+      </p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-num">01</div>
+          <h3>Vision World Models</h3>
+          <p>
+            Learn action-conditioned <strong>visual</strong> state transitions and predict how the
+            visible scene evolves. But contact-interface phenomena, such as pressure, slip, and grasp
+            stability, are <strong>weakly observable or entirely hidden</strong> from cameras,
+            especially once the hand occludes the object it is manipulating.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-num">02</div>
+          <h3>Tactile-Conditioned Policies</h3>
+          <p>
+            Tactile policies can use current contact observations directly, but this does not make
+            contact evolution part of the predicted world state.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-num">03</div>
+          <h3>Predictive Visuo-Tactile World Modeling</h3>
+          <p>
+            DexTacWAM jointly models visual scene and tactile contact dynamics, exposing
+            predictive contact-aware features to the action expert.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ ABSTRACT ============================ -->
+  <section class="section" id="abstract">
+    <div class="container narrow">
+      <h2 class="section-title">Abstract</h2>
+      <p>
+        Dexterous manipulation depends on contact dynamics that are often only partially observable
+        from vision. Recent World-Action Models (WAMs) couple predictive video world modeling with
+        action generation, but remain largely vision-centric and therefore cannot directly model
+        these contact dynamics. We present <strong>DexTacWAM</strong>, a visuo-tactile WAM that
+        encodes each fingertip independently, aggregates the resulting features through a
+        <strong>finger- and pose-aware tactile compressor</strong>, and injects the tactile latent
+        into a video diffusion world model for <strong>joint visuo-tactile world
+        modeling</strong>. Across six contact-rich dexterous manipulation tasks on a 22-DoF
+        bimanual platform, DexTacWAM achieves the highest score on every task, averaging
+        <strong>70.6</strong> versus <strong>38.0</strong> for the strongest baseline. Ablations
+        attribute the gain to modeling contact evolution as part of the predicted world state
+        rather than tactile conditioning alone: removing tactile world modeling reduces the
+        four-task mean from <strong>74.7 to 26.6</strong> while keeping the same tactile features
+        and action expert. After four hours of tactile-encoder adaptation with a frozen pretrained
+        vision VAE, our <strong>continual vision-to-touch learning</strong> extends the pretrained
+        video model to touch using roughly 100 demonstrations per task, <strong>without tactile
+        midtraining</strong>, while retaining visual prediction quality within 0.5&nbsp;dB of matched
+        vision-only counterparts. The compressor retains <strong>89.4%</strong> of pre-fusion
+        contact recall while enabling <strong>2.26× faster training</strong> and
+        <strong>1.29× faster inference</strong>. Together, these results show that pretrained video
+        priors can be extended to distributed multi-finger contact dynamics in a data- and
+        compute-efficient manner.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ DATA EFFICIENCY ============================ -->
+  <section class="section alt" id="data-efficiency">
+    <div class="container">
+      <h2 class="section-title">Data Efficiency</h2>
+      <p class="lead">
+        DexTacWAM achieves data-efficient vision-to-touch adaptation by reusing a pretrained
+        visual prior rather than learning tactile representations from scratch. This requires only
+        four hours of tactile-encoder adaptation plus roughly 100 demonstrations per task.
+      </p>
+
+      <div class="design-highlight" id="data-efficiency-design">
+        <span class="design-tag">Continual Vision-to-Touch Learning</span>
+        <div class="design-items">
+          <div class="design-item">
+            <h3>① Adapt the tactile encoder with 4 h of data</h3>
+            <p>
+              We first adapt lightweight tactile-encoder components on a 488-episode bimanual
+              corpus, keeping the pretrained visual VAE frozen. The resulting compressor retains
+              <strong>89.4%</strong> of pre-fusion contact recall.
+            </p>
+          </div>
+          <div class="design-item">
+            <h3>② Extend the video model without tactile midtraining</h3>
+            <p>
+              We then freeze the tactile encoder and finetune the pretrained video backbone for
+              joint visual and tactile prediction using roughly
+              <strong>100 demonstrations per task</strong>.
+            </p>
+          </div>
+          <div class="design-item">
+            <h3>③ Reuse the same task demonstrations for action learning</h3>
+            <p>
+              A freshly initialized action expert is trained on those same demonstrations, so no
+              data beyond the four-hour corpus and the per-task demonstrations is required.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="subsection-title" id="insight">Why Continual Vision-to-Touch Learning Works</h3>
+      <p class="lead">
+        Continual vision-to-touch learning works because the reused visual VAE already provides
+        task-discriminative tactile features, and the tactile compressor preserves that structure
+        while reducing the tactile token budget.
+      </p>
+
+      <div class="subhead" id="insight-tsne">Task structure before and after 5:1 tactile compression</div>
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" src="static/images/tactile_vae_tsne.png?v=20260916-2" alt="t-SNE comparison of frozen visual VAE and compressed tactile features" />
+      </figure>
+      <p class="caption">
+        Held-out tactile clips from all six tasks remain task-discriminative both before and after
+        5:1 compression. This supports reusing the frozen visual VAE as a tactile feature extractor
+        and shows that the compressor preserves task-relevant structure; it does not imply that
+        vision and touch occupy a shared embedding manifold.
+      </p>
+
+      <div class="cards" style="margin-top:28px">
+        <div class="card">
+          <div class="card-num">01</div>
+          <h3>Can a frozen visual VAE provide useful tactile representations?</h3>
+          <p>
+            A single right-thumb representation reaches <strong>95.6%</strong> 5-NN accuracy and
+            <strong>99.0%</strong> linear-probe accuracy, versus 16.7% uniform chance. This shows
+            a frozen visual VAE can provide useful tactile features without training a tactile
+            VAE from scratch.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-num">02</div>
+          <h3>Does 5:1 compression preserve the structure needed for tactile world modeling?</h3>
+          <p>
+            After five fingertips are compressed into one hand latent, 5-NN and linear-probe
+            accuracy reach <strong>96.4%</strong> and <strong>99.6%</strong>, matching the 95.6%
+            and 99.0% of the uncompressed single-fingertip representation above. The 5:1
+            compression preserves the task-relevant structure needed for efficient tactile
+            world modeling.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-num">03</div>
+          <h3>Do tactile latents reflect interaction progress rather than episode identity?</h3>
+          <p>
+            Within each task, structure follows interaction progress rather than recording
+            identity. This indicates that the representation captures phase-dependent structure
+            rather than only task or episode identity.
+          </p>
+        </div>
+      </div>
+
+      <div class="subhead" id="insight-contact">Latent structure tracks interaction progress</div>
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" src="static/images/tactile_tsne_contact_phase.png?v=20260916-2" alt="Per-task t-SNE plots colored by normalized interaction phase" />
+      </figure>
+      <p class="caption">
+        Right-thumb tactile clips are embedded separately for each task and colored by normalized
+        episode progress. Phase ANOVA R² is 0.75 for Tongs, 0.61 for Two-Hand Wipe, 0.48 for Cube
+        Place, 0.40 for Cube Handover, and 0.17 for Bowl, while episode agreement is negligible for
+        every task (AMI ≤ 0.07). Bottle Cap is the exception (phase R² 0.03), because cyclic
+        unscrewing is not well described by a single start-to-end phase.
+      </p>
+      <p class="note">
+        Transfer does not imply a shared vision–touch embedding: vision and tactile latents remain
+        well separated. The benefit comes from reusing a general-purpose image representation in a
+        new image domain.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ BOTTLENECK ============================ -->
+  <section class="section" id="bottleneck">
+    <div class="container">
+      <h2 class="section-title">Training and Deployment Efficiency</h2>
+      <p class="lead">
+        Treating all ten fingertip streams as separate DiT views substantially increases token count
+        and compute. Compressing five fingertip streams into one hand latent reduces the world-model
+        input from 11 views to 3 while retaining localized contact information.
+      </p>
+
+      <h3 class="table-title">Tactile view compression (single RTX 4090)</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research results table">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th scope="col">Views (V)</th>
+              <th scope="col">Composition</th>
+              <th scope="col">DiT Tokens</th>
+              <th scope="col">Latency / chunk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight">
+              <td><strong>3</strong> (deployed)</td>
+              <td>1 head + 2 hand tactile</td>
+              <td><strong>864</strong></td>
+              <td><strong>281.6 ms</strong></td>
+            </tr>
+            <tr>
+              <td>11 (uncompressed)</td>
+              <td>1 head + 10 fingertip</td>
+              <td>3168 <span style="color:var(--muted)">(3.67×)</span></td>
+              <td>363.0 ms <span style="color:var(--muted)">(1.29×)</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Compression reduces training iteration time from 3.87 to 1.71&nbsp;s/iter
+        (<strong>2.26×</strong>) and end-to-end inference latency from 363.0 to 281.6&nbsp;ms per
+        chunk (<strong>1.29×</strong>).
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ METHOD ============================ -->
+  <section class="section alt" id="method">
+    <div class="container">
+      <h2 class="section-title">Method</h2>
+
+      <div class="design-highlight" id="method-design">
+        <span class="design-tag">Method Overview</span>
+        <div class="design-items">
+          <div class="design-item">
+            <h3>① Five fingers → one compact hand latent</h3>
+            <p>
+              A finger- and pose-aware tactile compressor aggregates five fingertip streams into one
+              hand latent, preserving localized contact information while reducing ten fingertip
+              streams to two tactile views.
+            </p>
+          </div>
+          <div class="design-item">
+            <h3>② Joint visuo-tactile world modeling → predictive features → action</h3>
+            <p>
+              Compact hand latents enter the pretrained video world model as tactile views and are
+              modeled jointly with visual dynamics. A single world-model forward pass produces
+              predictive visuo-tactile features for the action expert without requiring
+              perceptually complete denoising.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" src="static/images/architecture.png?v=20260916-2" alt="DexTacWAM system architecture" />
+      </figure>
+      <p class="caption">
+        Compact tactile latents enter the pretrained video DiT as <strong>additional tactile views</strong>
+        (1 head + 2 hand tactile). The <strong>world-model transformer</strong> jointly models visual
+        and bimanual tactile dynamics and provides predictive visuo-tactile features in one forward
+        pass. The <strong>action expert</strong> cross-attends to these features with per-modality K/V
+        RMS normalization and predicts contact force, action, and next state.
+      </p>
+
+      <div class="method-grid" id="method-modules">
+        <div class="method-item">
+          <h3>Tactile Encoder via Reused Vision VAE</h3>
+          <p>
+            Each single-channel per-finger tactile map passes through a <em>1×1 grayscale→RGB conv</em>
+            into pseudo-RGB, then a <em>frozen</em> pretrained visual VAE shared across fingers,
+            providing a spatial prior compatible with the video diffusion latent space.
+          </p>
+        </div>
+        <div class="method-item">
+          <h3>Finger- &amp; Pose-Aware Tactile Compressor</h3>
+          <p>
+            Finger identity, hand pose, self-attention pooling, and temporal refinement compress
+            five fingertip latents into one hand latent while preserving localized contact structure.
+          </p>
+        </div>
+        <div class="method-item">
+          <h3>Visuo-Tactile World Modeling</h3>
+          <p>
+            Hand tactile latents are appended as tactile views during training and jointly optimized
+            with visual latents using a modality-split flow-matching objective.
+          </p>
+        </div>
+        <div class="method-item">
+          <h3>Action Expert with Per-Modality K/V RMSNorm</h3>
+          <p>
+            The action expert cross-attends to world-model latents with per-modality RMS
+            normalization of K/V. Visual and tactile keys arrive at very different scales; without
+            this normalization, the action expert fails to converge.
+          </p>
+        </div>
+      </div>
+
+      <div class="subhead" id="method-encoder">Multi-finger tactile encoder architecture</div>
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" src="static/images/tactile_encoder_architecture.jpg?v=20260916-2" alt="DexTacWAM multi-finger tactile encoder and tactile compressor" />
+      </figure>
+      <p class="caption">
+        Per-finger tactile maps → grayscale→RGB conv → frozen vision VAE (shared) → finger-specific
+        positional embeddings → a tactile compressor combining self-attention pooling,
+        TimeSformer refinement, and pose conditioning. Pre- and post-fusion reconstruction losses
+        supervise the latents and encourage the fused hand latent to retain localized contact.
+      </p>
+
+      <div class="stages" id="method-training">
+        <div class="stage"><span class="stage-tag">Stage 1</span>
+          <div class="stage-content"><strong>Tactile-Encoder Pretraining.</strong> Pretrain lightweight tactile modules on a diverse ~4-hour, <strong>488-episode</strong> corpus with the visual VAE frozen.</div>
+        </div>
+        <div class="stage"><span class="stage-tag">Stage 2</span>
+          <div class="stage-content"><strong>Visuo-Tactile World-Model Finetuning.</strong> Freeze the tactile encoder and directly finetune the pretrained video model on <strong>~100 demos per task</strong>, without video-model tactile midtraining.</div>
+        </div>
+        <div class="stage"><span class="stage-tag">Stage 3</span>
+          <div class="stage-content"><strong>Action-Expert Training.</strong> Initialize a fresh action expert and train it on the same task demonstrations.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ ENCODER ABLATION ============================ -->
+  <section class="section" id="encoder-ablation">
+    <div class="container">
+      <h2 class="section-title">Tactile-Encoder Component Ablations</h2>
+      <p class="lead">
+        We measure contact recall before and after five-finger-to-one-hand fusion on held-out
+        episodes. <strong>Retention@9</strong> measures the fraction of pre-fusion Recall@9
+        preserved after five-finger-to-one-hand compression.
+      </p>
+
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research results table">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th scope="col">Variant</th>
+              <th scope="col">Recall@1</th>
+              <th scope="col">Recall@9</th>
+              <th scope="col">Retention@9</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cross-attention pooling</td>
+              <td>0.561</td><td>0.492</td><td>0.629</td>
+            </tr>
+            <tr>
+              <td>Self-attention pooling</td>
+              <td>0.656</td><td>0.575</td><td>0.717</td>
+            </tr>
+            <tr>
+              <td>Self-attention + pose injection</td>
+              <td><strong>0.750</strong></td><td>0.645</td><td>0.796</td>
+            </tr>
+            <tr>
+              <td>Self-attention + temporal refinement</td>
+              <td>0.748</td><td>0.710</td><td>0.873</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>Full compressor</strong> (pose + temporal)</td>
+              <td>0.748</td><td><strong>0.725</strong></td><td><strong>0.894</strong></td>
+            </tr>
+            <tr>
+              <td>&nbsp;&nbsp;w/o finger-identity embeddings</td>
+              <td>0.702</td><td>0.671</td><td>0.849</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Evaluated on the 24 held-out episodes (464–487) of the diverse-488 corpus. Every variant
+        shares the same frozen VAE and the same per-finger inputs, so the differences come from the
+        aggregation design. Removing finger identity reduces Recall@9 by 0.054, supporting the use
+        of finger identity during aggregation.
+      </p>
+
+      <ul class="takeaways">
+        <li>Temporal refinement yields the largest Recall@9 gain (+0.135 over self-attention pooling).</li>
+        <li>Pose injection helps most at Recall@1, where knowing hand configuration disambiguates which finger is touching.</li>
+        <li>The full compressor retains <strong>89.4%</strong> of pre-fusion contact recall, against 62.9% for cross-attention pooling.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================ TASKS ============================ -->
+  <section class="section alt" id="tasks">
+    <div class="container">
+      <h2 class="section-title">End-to-End Evaluation on Six Contact-Rich Tasks</h2>
+      <p class="lead">
+        Six tasks on a 22-DoF bimanual platform, spanning tool-mediated force control, friction-
+        dependent separation, rotational contact, sustained surface contact, occlusion, and
+        hand-to-hand transfer. Camera access is set by task and is identical across all methods
+        within a task.
+      </p>
+      <p class="note" style="margin:0 auto 24px">
+        <strong>The six task videos below show autonomous DexTacWAM rollouts. Original playback speed.</strong>
+      </p>
+
+      <div class="demo-grid" id="task-demos">
+        <figure class="media-frame demo-card">
+          <div class="demo-media">
+            <video controls muted loop playsinline preload="none" poster="static/videos/web/tasks/tongs_poster.jpg?v=20260916-2" aria-label="Autonomous tongs demonstration">
+              <source src="static/videos/web/tasks/tongs.mp4" type="video/mp4" />
+            </video>
+            <span class="demo-number" aria-hidden="true">01</span>
+          </div>
+          <figcaption class="demo-caption">
+            <span class="demo-category">Tool-mediated force control</span>
+            <h3>Tongs</h3>
+            <p>Precise normal force for grasping a cherry tomato with tongs.</p>
+          </figcaption>
+        </figure>
+        <figure class="media-frame demo-card">
+          <div class="demo-media">
+            <video controls muted loop playsinline preload="none" poster="static/videos/web/tasks/bottle_cap_poster.jpg?v=20260916-2" aria-label="Autonomous bottle cap unscrewing demonstration">
+              <source src="static/videos/web/tasks/bottle_cap.mp4" type="video/mp4" />
+            </video>
+            <span class="demo-number" aria-hidden="true">02</span>
+          </div>
+          <figcaption class="demo-caption">
+            <span class="demo-category">Friction and torque</span>
+            <h3>Bottle cap unscrewing</h3>
+            <p>Coordinated thumb–index contact during unscrewing.</p>
+          </figcaption>
+        </figure>
+        <figure class="media-frame demo-card">
+          <div class="demo-media">
+            <video controls muted loop playsinline preload="none" poster="static/videos/web/tasks/bowl_destack_poster.jpg?v=20260916-2" aria-label="Autonomous bowl unstacking demonstration">
+              <source src="static/videos/web/tasks/bowl_destack.mp4" type="video/mp4" />
+            </video>
+            <span class="demo-number" aria-hidden="true">03</span>
+          </div>
+          <figcaption class="demo-caption">
+            <span class="demo-category">Friction-dependent separation</span>
+            <h3>Bowl unstacking</h3>
+            <p>Separating stacked bowls through fingertip contact.</p>
+          </figcaption>
+        </figure>
+        <figure class="media-frame demo-card">
+          <div class="demo-media">
+            <video controls muted loop playsinline preload="none" poster="static/videos/web/tasks/wipe_whiteboard_poster.jpg?v=20260916-2" aria-label="Autonomous two-hand wipe demonstration">
+              <source src="static/videos/web/tasks/wipe_whiteboard.mp4" type="video/mp4" />
+            </video>
+            <span class="demo-number" aria-hidden="true">04</span>
+          </div>
+          <figcaption class="demo-caption">
+            <span class="demo-category">Sustained surface contact</span>
+            <h3>Two-hand wipe</h3>
+            <p>Maintaining stable contact during a long wiping motion.</p>
+          </figcaption>
+        </figure>
+        <figure class="media-frame demo-card">
+          <div class="demo-media">
+            <video controls muted loop playsinline preload="none" poster="static/videos/web/tasks/cube_place_poster.jpg?v=20260916-2" aria-label="Autonomous cube place with occlusion demonstration">
+              <source src="static/videos/web/tasks/cube_place.mp4" type="video/mp4" />
+            </video>
+            <span class="demo-number" aria-hidden="true">05</span>
+          </div>
+          <figcaption class="demo-caption">
+            <span class="demo-category">Contact under occlusion</span>
+            <h3>Cube place with occlusion</h3>
+            <p>Placing the cube while the arm occludes the object.</p>
+          </figcaption>
+        </figure>
+        <figure class="media-frame demo-card">
+          <div class="demo-media">
+            <video controls muted loop playsinline preload="none" poster="static/videos/web/tasks/cube_handover_poster.jpg?v=20260916-2" aria-label="Autonomous cube handover demonstration">
+              <source src="static/videos/web/tasks/cube_handover.mp4" type="video/mp4" />
+            </video>
+            <span class="demo-number" aria-hidden="true">06</span>
+          </div>
+          <figcaption class="demo-caption">
+            <span class="demo-category">Bimanual coordination</span>
+            <h3>Cube handover</h3>
+            <p>Coordinating grasp and release between hands.</p>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ RESULTS ============================ -->
+  <section class="section" id="results">
+    <div class="container">
+      <h2 class="section-title">Quantitative Results</h2>
+
+      <div id="results-avg" class="chart-anchor"></div>
+      <div class="chart-panel simplified-chart" id="averageScoreChart" role="group" aria-label="Average task score across six tasks, on a scale from 0 to 100">
+        <div class="chart-axis" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+        <div class="barchart"><div class="bar-row highlight" data-score="70.6">
+          <span class="bar-label">DexTacWAM <span class="ours-tag">Ours</span></span>
+          <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:70.6%"></span></span>
+          <span class="bar-val">70.6</span>
+        </div><div class="bar-row" data-score="38.0">
+          <span class="bar-label">RDP</span>
+          <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:38.0%"></span></span>
+          <span class="bar-val">38.0</span>
+        </div><div class="bar-row" data-score="27.5">
+          <span class="bar-label">&pi;<sub>0.5</sub> (no tactile)</span>
+          <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:27.5%"></span></span>
+          <span class="bar-val">27.5</span>
+        </div><div class="bar-row" data-score="27.3">
+          <span class="bar-label">Genie Envisioner (no tactile)</span>
+          <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:27.3%"></span></span>
+          <span class="bar-val">27.3</span>
+        </div><div class="bar-row" data-score="18.2">
+          <span class="bar-label">ViTacFormer</span>
+          <span class="bar-track" aria-hidden="true"><span class="bar-fill" style="width:18.2%"></span></span>
+          <span class="bar-val">18.2</span>
+        </div></div>
+      </div>
+      <p class="note">20 real-robot trials per method per task. DexTacWAM leads the strongest baseline by 32.6 absolute points.</p>
+
+      <h3 class="table-title" id="results-pertask">Per-task score vs. baselines (%)</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research results table">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">Cube Place<br /><span style="font-weight:400">(H)</span></th>
+              <th scope="col">Handover<br /><span style="font-weight:400">(H+L+R)</span></th>
+              <th scope="col">Wipe<br /><span style="font-weight:400">(H+L+R)</span></th>
+              <th scope="col">Tongs<br /><span style="font-weight:400">(H+R)</span></th>
+              <th scope="col">Bowl<br /><span style="font-weight:400">(H+R)</span></th>
+              <th scope="col">Cap<br /><span style="font-weight:400">(H+L+R)</span></th>
+              <th scope="col">Avg.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>&pi;<sub>0.5</sub> (no tactile)</td>
+              <td>10</td><td>46</td><td>24</td><td>0</td><td>40</td><td>45</td><td>27.5</td>
+            </tr>
+            <tr>
+              <td>ViTacFormer</td>
+              <td>20</td><td>33.3</td><td>26</td><td>0</td><td>20</td><td>10</td><td>18.2</td>
+            </tr>
+            <tr>
+              <td>RDP</td>
+              <td>50</td><td>60</td><td>48</td><td>10</td><td>30</td><td>30</td><td>38.0</td>
+            </tr>
+            <tr>
+              <td>Genie Envisioner (no tactile)</td>
+              <td>10</td><td>30</td><td>44</td><td>5</td><td>35</td><td>40</td><td>27.3</td>
+            </tr>
+            <tr class="highlight">
+              <td><strong>DexTacWAM</strong></td>
+              <td><strong>90</strong></td><td><strong>71.6</strong></td><td><strong>77</strong></td>
+              <td><strong>60</strong></td><td><strong>65</strong></td><td><strong>60</strong></td>
+              <td><strong>70.6</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        H/L/R denote head, left-wrist and right-wrist cameras. The widest margin is Tongs (60 vs 10),
+        where tactile sensing provides evidence of grasp state through the tool;
+        all compared baselines score at or below 10.
+      </p>
+
+      <h3 class="table-title" id="results-ablation">Does the world model do the work, or just richer tactile input?</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research results table">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th scope="col">Variant</th>
+              <th scope="col">Cube Place</th>
+              <th scope="col">Handover</th>
+              <th scope="col">Wipe</th>
+              <th scope="col">Tongs</th>
+              <th scope="col">4-task mean</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight">
+              <td><strong>DexTacWAM</strong> (predictive tactile WM)</td>
+              <td><strong>90</strong></td><td><strong>71.6</strong></td><td><strong>77</strong></td>
+              <td><strong>60</strong></td><td><strong>74.7</strong></td>
+            </tr>
+            <tr>
+              <td>w/o tactile world modeling (direct tactile conditioning)</td>
+              <td>20</td><td>33.3</td><td>48</td><td>5</td><td>26.6</td>
+            </tr>
+            <tr>
+              <td>w/o per-modality K/V RMS normalization</td>
+              <td colspan="5">Did not converge — open-loop actions fail to track ground truth</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        The ablated model keeps the same tactile encoder, observations, action expert, action space
+        and training data; <strong>only tactile prediction is removed</strong> from the world model.
+        The four-task mean decreases from 74.7 to 26.6. The gain therefore depends strongly on
+        modeling contact evolution as part of the predicted world state rather than on tactile
+        conditioning alone.
+      </p>
+
+      <ul class="takeaways">
+        <li>Pooling the four binary tasks, DexTacWAM succeeds on <strong>55/80</strong> trials (68.8%, 95% CI [57.9, 77.8]) against <strong>24/80</strong> for the strongest baseline (30.0%, [21.1, 40.8]); Fisher exact <em>p</em> = 1.59×10⁻⁶.</li>
+        <li>Compressing ten fingertip streams into two hand latents cuts DiT view tokens 3.67× and per-chunk latency 1.29×.</li>
+      </ul>
+
+      <div class="subhead" id="results-general">Generalization to unseen Bowl configurations</div>
+      <p class="lead" style="margin-top:0">
+        Trained only on three-bowl stacks in pink, blue and orange, DexTacWAM reaches
+        <strong>13/20</strong> on unseen green, purple and yellow bowls — matching its
+        in-distribution 13/20 — and <strong>12/20</strong> when the stack height changes to two or
+        four bowls. Performance remains stable under changes in object appearance and stack
+        geometry, which also induce different grasp configurations.
+      </p>
+
+      <figure class="media-frame">
+        <img loading="lazy" decoding="async" src="static/images/generalization_rollouts.png?v=20260916-2" alt="Keyframe rollouts of DexTacWAM unstacking bowls in three unseen colors and two unseen stack heights" />
+      </figure>
+      <p class="caption">
+        Keyframes progress from left to right for three unseen bowl colors (yellow, green, purple)
+        and two unseen stack heights (two and four bowls), none of them seen during training. Every
+        frame is sampled from an <strong>autonomous closed-loop execution</strong>, not a
+        teleoperated demonstration. In all cases the policy reaches the rim, establishes
+        thumb–index contact, and separates the top bowl.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ WORLD-MODEL PREDICTION ============================ -->
+  <section class="section alt" id="prediction">
+    <div class="container">
+      <h2 class="section-title">Qualitative Visuo-Tactile Prediction</h2>
+      <p class="lead">
+        We visualize future <strong>visual observations</strong> and <strong>tactile deformation
+        flow</strong> on a held-out Two-Hand Wipe trajectory.
+      </p>
+
+      <figure class="media-frame" id="pred-rollout">
+        <video muted loop playsinline controls preload="none" width="100%"
+               poster="static/videos/web/wm_prediction_4col_poster.jpg?v=20260916-2">
+          <source src="static/videos/web/wm_prediction_4col.mp4" type="video/mp4" />
+        </video>
+      </figure>
+      <p class="caption">
+        Long-horizon rollout. <strong>Left two panels:</strong> ground-truth vs. predicted head view.
+        <strong>Right two blocks:</strong> per-finger tactile divergence for the left and right hand,
+        ground truth beside prediction. The predicted contact patterns emerge, move, and release in
+        step with the real ones.
+      </p>
+
+      <h3 class="table-title" id="pred-metrics">Tactile prediction quality on held-out trajectories</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research results table">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Value</th>
+              <th scope="col">Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Latent cosine similarity ↑</td>
+              <td><strong>0.967</strong></td>
+              <td>Predictions align with the true tactile future</td>
+            </tr>
+            <tr>
+              <td>NMSE ↓</td>
+              <td>0.063</td>
+              <td>Low normalized latent prediction error</td>
+            </tr>
+            <tr>
+              <td>Contact F1 ↑</td>
+              <td>0.737</td>
+              <td>Precision/recall/F1 are 0.749/0.725/0.737 in flow space</td>
+            </tr>
+            <tr class="highlight">
+              <td>Error vs. copy-last-frame ↓</td>
+              <td>0.561×</td>
+              <td>The model predicts dynamics beyond repeating the present</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Tactile signals are temporally smooth, so a forecaster can score well by simply repeating the
+        last observation. DexTacWAM attains 0.561× the copy-last-frame error, indicating that it
+        predicts contact evolution rather than exploiting temporal smoothness.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ CONTINUAL LEARNING / RETENTION ============================ -->
+  <section class="section" id="retention">
+    <div class="container">
+      <h2 class="section-title">Continual Vision-to-Touch Learning</h2>
+      <p class="lead">
+        DexTacWAM directly adapts a pretrained visual world model to touch using task-scale
+        demonstrations. We test whether acquiring tactile prediction degrades the original visual
+        prediction capability.
+      </p>
+
+      <h3 class="table-title" id="retention-rgb">RGB future-prediction quality (held-out, V=3)</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable research results table">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th scope="col">Task</th>
+              <th scope="col">Steps</th>
+              <th scope="col">Vision-only PSNR ↑</th>
+              <th scope="col">Visuo-tactile PSNR ↑</th>
+              <th scope="col">Δ PSNR</th>
+              <th scope="col">95% CI</th>
+              <th scope="col">Δ SSIM ↑</th>
+              <th scope="col">Δ LPIPS ↓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cube Handover</td>
+              <td>25K</td><td>17.78</td><td>17.84</td><td>+0.06</td>
+              <td>[−0.16, +0.28]</td><td>+0.001</td><td>+0.004</td>
+            </tr>
+            <tr class="highlight">
+              <td>Two-Hand Wipe</td>
+              <td>30K</td><td>17.14</td><td>17.07</td><td>−0.07</td>
+              <td>[−0.49, +0.36]</td><td>−0.006</td><td>+0.010</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Differences are paired per episode, with the three views averaged within each episode.
+        Neither task shows a detectable change; the intervals bound any PSNR loss at 0.16&nbsp;dB
+        on Cube Handover and 0.49&nbsp;dB on Two-Hand Wipe.
+      </p>
+
+      <ul class="takeaways">
+        <li>No video-model tactile midtraining is required.</li>
+        <li>Visual prediction remains within 0.5&nbsp;dB of matched vision-only counterparts.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================ CONCLUSION ============================ -->
+  <section class="section alt" id="conclusion">
+    <div class="container narrow">
+      <h2 class="section-title">Conclusion</h2>
+      <p>
+        DexTacWAM extends a pretrained video prior to jointly model visual scene dynamics and
+        multi-finger contact dynamics. Across six contact-rich tasks it achieves the highest score
+        on every task. The gain depends strongly on modeling contact evolution as part of the
+        predicted world state rather than on tactile conditioning alone. Continual vision-to-touch
+        learning adds tactile predictive capability using four hours of tactile data for lightweight
+        tactile-encoder adaptation and task-scale demonstrations while preserving visual prediction
+        quality. Its
+        predictive-feature interface avoids requiring perceptually complete denoising before action
+        generation, while tactile compression delivers measured training and inference speedups.
+        Together, these results show that pretrained video priors can be extended to touch both
+        data- and compute-efficiently, providing a practical path toward WAMs for complex physical
+        interaction.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ Q&A ============================ -->
+  <section class="section" id="qa">
+    <div class="container narrow">
+      <h2 class="section-title">Q&amp;A</h2>
+
+      <details class="qa" open>
+        <summary>Why reuse video priors instead of pretraining an entire tactile world model?</summary>
+        <p>
+          Because tactile data is expensive and scarce, we reuse a frozen visual VAE as the
+          per-finger tactile feature extractor and pretrain only the tactile encoder's lightweight
+          projection and compressor on four hours of data. These features are
+          task-discriminative, and structure is retained after 5:1 compression. We then freeze
+          the tactile encoder and directly extend the pretrained video model to tactile prediction
+          with task-scale data, without a separate tactile-midtraining stage for the video backbone.
+        </p>
+      </details>
+
+      <details class="qa">
+        <summary>Why does predictive tactile world modeling matter?</summary>
+        <p>
+          The controlled ablation keeps the tactile encoder, observations, action expert, action
+          space, and training data fixed while removing tactile prediction from the world model. The
+          four-task mean decreases from <strong>74.7 to 26.6</strong>. A single world-model forward
+          pass provides predictive visuo-tactile features directly to the action expert without
+          requiring perceptually complete denoising of either stream.
+        </p>
+      </details>
+
+      <details class="qa">
+        <summary>Why use a single world-model forward pass instead of fully denoised predictions?</summary>
+        <p>
+          Diffusion denoising provides a self-supervised training objective for learning predictive
+          visual and tactile representations. At inference, a single world-model forward pass
+          provides predictive visuo-tactile features directly to the action expert, without
+          reconstructing perceptually complete futures. Fully denoising both streams adds substantial
+          computation and latency, making low-latency deployment difficult on resource-constrained
+          edge hardware, while offering limited additional control benefit in our setting.
+        </p>
+      </details>
+
+      <details class="qa">
+        <summary>What is visuo-tactile co-world modeling?</summary>
+        <p>
+          We use co-world modeling to mean jointly modeling visual and tactile latents as one
+          predicted world state. Tactile latents are appended along the view axis and trained with a
+          modality-split objective, so the model captures both scene and contact dynamics.
+        </p>
+      </details>
+
+      <details class="qa">
+        <summary>Isn't the gain just from giving the policy tactile input?</summary>
+        <p>
+          In the central ablation, we remove tactile prediction from the world model and condition
+          the action expert directly on the same encoded tactile features, holding the encoder,
+          observations, action expert, action space, and data fixed. The four-task mean decreases
+          from <strong>74.7 to 26.6</strong>, showing that tactile conditioning alone does not
+          account for the gain.
+        </p>
+      </details>
+
+      <details class="qa">
+        <summary>Why compress ten fingers into two hand views?</summary>
+        <p>
+          DiT cost scales with view count: 1 head + 10 fingertip views is 3168 tokens against 864
+          for 1 head + 2 hand views (3.67×), and 363.0 vs 281.6&nbsp;ms per chunk. The finger- and
+          pose-aware tactile compressor keeps 89.4% of pre-fusion contact recall through that compression.
+        </p>
+      </details>
+
+      <details class="qa">
+        <summary>How are visual and tactile features balanced in the action expert?</summary>
+        <p>
+          Visual and tactile keys enter cross-attention at different scales. Without per-modality
+          K/V RMS normalization, the action expert does not converge: open-loop predictions fail to
+          track ground-truth actions, so closed-loop evaluation is not performed.
+        </p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============================ BIBTEX ============================ -->
+  <section class="section alt" id="bibtex">
+    <div class="container narrow">
+      <h2 class="section-title">BibTeX</h2>
+      <pre class="bibtex"><code>@misc{dextacwam2026,
+  title        = {DexTacWAM: A Visuo-Tactile World-Action Model for Dexterous Manipulation},
+  author       = {Yuan, Haoran and Wang, Zekai and Shao, Boning and Lu, Haoran and Darrell, Trevor and Lourentzou, Ismini and Zhan, Wei},
+  howpublished = {Preprint},
+  year         = {2026}
+}</code></pre>
+      <button class="copy-btn" id="copyBib" type="button">Copy BibTeX</button><span class="copy-status" id="copyStatus" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <!-- ============================ TEAM ============================ -->
+  <section class="section" id="team">
+    <div class="container">
+      <h2 class="section-title">Our Team</h2>
+      <div class="team">
+        <div class="member"><div class="avatar" aria-hidden="true">HY</div><span>Haoran Yuan</span></div>
+        <div class="member"><div class="avatar" aria-hidden="true">ZW</div><span>Zekai Wang</span></div>
+        <div class="member"><div class="avatar" aria-hidden="true">BS</div><span>Boning Shao</span></div>
+        <div class="member"><div class="avatar" aria-hidden="true">HL</div><span>Haoran Lu</span></div>
+        <div class="member"><div class="avatar" aria-hidden="true">TD</div><span>Trevor Darrell</span></div>
+        <div class="member"><div class="avatar" aria-hidden="true">IL</div><span>Ismini Lourentzou</span></div>
+        <div class="member"><div class="avatar" aria-hidden="true">WZ</div><span>Wei Zhan</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ FOOTER ============================ -->
+  <footer class="footer">
+    <div class="container narrow">
+      <p>
+        The website template is adapted from the
+        <a href="https://github.com/nerfies/nerfies.github.io" target="_blank" rel="noopener">Nerfies</a>
+        and
+        <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page</a>
+        templates.
+      </p>
+    </div>
+  </footer>
+
+  <script src="static/js/main.js?v=20260916-9"></script>
+</body>
+</html>

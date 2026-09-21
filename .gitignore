@@ -1,0 +1,13 @@
+# Raw capture footage. These are the 1080p iPhone originals (~900 MB total)
+# that the web clips in static/videos/web/ are transcoded from. Keep them
+# out of the repo; GitHub Pages only needs the transcoded mp4s.
+static/videos/demos/
+
+# Large local artifacts that are not part of the published site.
+*.MOV
+*.mov
+*.pptx
+DexTacWAM_website.pdf
+
+# Regenerable QA artifact from tools/make_contact_sheet.py.
+tools/contact_sheet.png
