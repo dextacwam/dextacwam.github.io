@@ -549,8 +549,8 @@
 
       <p class="note">
         What the encoder actually sees: each fingertip returns a grayscale image of a deformable
-        marker grid, so contact arrives as a spatial pattern rather than a scalar force reading.
-        That is what makes a pretrained visual VAE a natural starting point for touch.
+        marker grid, and contact appears as a localized compression and shear of that grid. This
+        spatial image structure makes a pretrained visual VAE a natural starting point for touch.
       </p>
       <figure class="media-frame">
         <img loading="lazy" decoding="async" width="2000" height="620" src="static/images/raw_tactile_observations.jpg?v=20260921-1" alt="Raw head, wrist, and ten-fingertip tactile observations before and during contact on the two-hand wipe task" />
