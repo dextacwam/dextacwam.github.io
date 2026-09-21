@@ -566,7 +566,7 @@
 
       <div class="stages" id="method-training">
         <div class="stage"><span class="stage-tag">Stage 1</span>
-          <div class="stage-content"><strong>Tactile-Encoder Pretraining.</strong> Pretrain lightweight tactile modules on a diverse ~4-hour, <strong>488-episode</strong> corpus with the visual VAE frozen.</div>
+          <div class="stage-content"><strong>Tactile-Encoder Adaptation.</strong> Adapt the trainable tactile components, the grayscale-to-RGB projection and the tactile compressor, on the <strong>diverse-488</strong> corpus of roughly four hours and 488 bimanual episodes, with the visual VAE frozen.</div>
         </div>
         <div class="stage"><span class="stage-tag">Stage 2</span>
           <div class="stage-content"><strong>Visuo-Tactile World-Model Finetuning.</strong> Freeze the tactile encoder and directly finetune the pretrained video model on <strong>~100 demos per task</strong>, without video-model tactile midtraining.</div>
