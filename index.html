@@ -1028,7 +1028,7 @@
         <summary>Why reuse video priors instead of pretraining an entire tactile world model?</summary>
         <p>
           Because tactile data is expensive and scarce, we reuse a frozen visual VAE as the
-          per-finger tactile feature extractor and pretrain only the tactile encoder's lightweight
+          per-finger tactile feature extractor and adapt only the tactile encoder's lightweight
           projection and compressor on four hours of data. These features are
           task-discriminative, and structure is retained after 5:1 compression. We then freeze
           the tactile encoder and directly extend the pretrained video model to tactile prediction
