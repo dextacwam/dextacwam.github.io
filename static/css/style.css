@@ -682,6 +682,7 @@ html{scroll-padding-top:96px}body{line-height:1.8;font-size:1rem}button,select{f
   gap: 4px 24px;
   max-width: 100%;
 }
+.project-info .visit-note,
 .project-info .advising-note { display: block; width: 100%; }
 @media (max-width: 900px) {
   .project-info .authors { font-size: .9375rem; }
@@ -793,6 +794,7 @@ html{scroll-padding-top:96px}body{line-height:1.8;font-size:1rem}button,select{f
 .project-info .affiliations { color: var(--muted); margin-top: 22px; gap: 6px; }
 .project-info .affiliation-row { margin-bottom: 4px; }
 .project-info .project-lead-note,
+.project-info .visit-note,
 .project-info .advising-note { font-size: .8125rem; }
 .project-info .links { margin-top: 26px; }
 .project-info .link-btn {
@@ -843,6 +845,7 @@ html{scroll-padding-top:96px}body{line-height:1.8;font-size:1rem}button,select{f
   .project-info .affiliations { font-size: .8125rem; margin-top: 21px; }
   .project-info .affiliation-row { flex-direction: column; align-items: center; gap: 5px; }
   .project-info .project-lead-note,
+  .project-info .visit-note,
   .project-info .advising-note { font-size: .75rem; }
   .institution-logos { margin-top: 56px; column-gap: 56px; }
 }
@@ -888,6 +891,7 @@ html{scroll-padding-top:96px}body{line-height:1.8;font-size:1rem}button,select{f
   gap: 3px 24px;
 }
 .project-info .project-lead-note,
+.project-info .visit-note,
 .project-info .advising-note {
   display: inline;
   width: auto;
@@ -911,6 +915,7 @@ html{scroll-padding-top:96px}body{line-height:1.8;font-size:1rem}button,select{f
   .project-info .author-row { gap: 4px 12px; }
   .project-info .affiliations { font-size: .8125rem; }
   .project-info .project-lead-note,
+  .project-info .visit-note,
   .project-info .advising-note { font-size: .75rem; }
 }
 
