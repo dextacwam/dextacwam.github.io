@@ -298,6 +298,7 @@ a:hover { text-decoration: underline; }
 }
 .link-btn:hover { text-decoration: none; transform: translateY(-2px); background: var(--accent); color: #fff; }
 .link-btn .ic { font-size: 1rem; }
+.link-btn .ic-svg { display: inline-flex; align-items: center; }
 .hero-rollout-status {
   display: flex;
   flex-wrap: wrap;
